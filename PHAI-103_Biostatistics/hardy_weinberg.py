@@ -19,8 +19,10 @@ from typing import Optional
 import numpy as np
 import pandas as pd
 from scipy import stats
+import sys
 import matplotlib
-matplotlib.use("Agg")
+if "ipykernel" not in sys.modules and "IPython" not in sys.modules:
+    matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 import seaborn as sns
 from loguru import logger

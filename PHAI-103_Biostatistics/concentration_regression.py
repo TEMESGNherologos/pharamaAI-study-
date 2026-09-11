@@ -21,8 +21,10 @@ from scipy import stats
 import statsmodels.api as sm
 import statsmodels.formula.api as smf
 from statsmodels.stats.multicomp import pairwise_tukeyhsd
+import sys
 import matplotlib
-matplotlib.use("Agg")
+if "ipykernel" not in sys.modules and "IPython" not in sys.modules:
+    matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 import seaborn as sns
 from loguru import logger
