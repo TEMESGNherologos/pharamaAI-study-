@@ -236,6 +236,10 @@ def run_pipeline(input_csv: str | Path, output_name: str = "cleaned_pharmgkb.csv
     return df
 
 
+# Alias for notebook workflows
+clean_pharmacy_dataframe = run_pipeline
+
+
 # ──────────────────────────────────────────────────────────────
 # CLI Demo
 # ──────────────────────────────────────────────────────────────
