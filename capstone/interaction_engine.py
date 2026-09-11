@@ -56,14 +56,16 @@ def get_connection() -> Generator[sqlite3.Connection, None, None]:
 
 def init_db() -> None:
     """Initialise DB schema + seed data from schema.sql."""
-    schema_file = Path(__file__).parent.parent / "PHAI-102_SQL" / "schema.sql"
-    if not schema_file.exists():
-        logger.warning(f"Schema not found at {schema_file}; skipping seed.")
-        return
-    sql = schema_file.read_text(encoding="utf-8")
+    core_schema = Path(__file__).parent.parent / "PHAI-102_SQL" / "schema.sql"
+    capstone_schema = Path(__file__).parent / "database" / "schema.sql"
+    
     with get_connection() as conn:
-        conn.executescript(sql)
-    logger.success(f"Database initialised → {DB_PATH}")
+        if core_schema.exists():
+            conn.executescript(core_schema.read_text(encoding="utf-8"))
+        if capstone_schema.exists():
+            conn.executescript(capstone_schema.read_text(encoding="utf-8"))
+            
+    logger.success(f"Database initialised -> {DB_PATH}")
 
 
 # ──────────────────────────────────────────────────────────────
@@ -205,11 +207,11 @@ def check_drug_interaction(
     # Step 4 — Assemble result
     alerts: list[str] = []
     if ddi and ddi["severity"] in ("Contraindicated", "Major"):
-        alerts.append(f"⛔ {ddi['severity']} interaction: {drug_a} + {drug_b} — {ddi['mechanism']}")
+        alerts.append(f"[{ddi['severity'].upper()}] interaction: {drug_a} + {drug_b} - {ddi['mechanism']}")
     if patient_genotype.upper() == "PM":
-        alerts.append(f"⚠️  Patient is CYP2D6 Poor Metabolizer — risk of drug accumulation")
+        alerts.append(f"[WARNING] Patient is {gene} Poor Metabolizer - risk of drug accumulation")
     if patient_genotype.upper() == "UM":
-        alerts.append(f"⚠️  Patient is CYP2D6 Ultrarapid Metabolizer — risk of rapid conversion / toxicity")
+        alerts.append(f"[WARNING] Patient is {gene} Ultrarapid Metabolizer - risk of rapid conversion / toxicity")
 
     return {
         "drug_a":         drug_a,
@@ -266,7 +268,7 @@ if __name__ == "__main__":
             "patient_genotype": "PM",
             "ddi": {
                 "severity":  "Major",
-                "mechanism": "Fluoxetine inhibits CYP2D6, converting NM → PM phenotype; "
+                "mechanism": "Fluoxetine inhibits CYP2D6, converting NM -> PM phenotype; "
                              "codeine accumulation without active metabolite",
                 "management": "Avoid combination. Use non-opioid analgesic.",
             },
@@ -284,8 +286,8 @@ if __name__ == "__main__":
                 "risk_tier":   "High",
             },
             "alerts": [
-                "⛔ Major interaction: Codeine + Fluoxetine — CYP2D6 inhibition",
-                "⚠️  Patient is CYP2D6 Poor Metabolizer — risk of drug accumulation",
+                "[CRITICAL] Major interaction: Codeine + Fluoxetine - CYP2D6 inhibition",
+                "[WARNING] Patient is CYP2D6 Poor Metabolizer - risk of drug accumulation",
             ],
         }
 

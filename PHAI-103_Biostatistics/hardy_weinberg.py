@@ -19,6 +19,8 @@ from typing import Optional
 import numpy as np
 import pandas as pd
 from scipy import stats
+import matplotlib
+matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 import seaborn as sns
 from loguru import logger
@@ -149,7 +151,7 @@ def plot_hwe(result: dict, outpath: Optional[str] = None) -> None:
         f"HWE Analysis — {result['gene']} ({result['variant']})\n"
         f"Population: {result['population']} | n={result['N']}\n"
         f"χ²={result['chi2_statistic']:.3f}  p={result['p_value']:.4f}  "
-        f"{'✅ In HWE' if result['in_HWE'] else '⚠️ Deviation Detected'}",
+        f"{'[In HWE]' if result['in_HWE'] else '[Deviation Detected]'}",
         fontsize=11
     )
     ax.set_xticks(x)
@@ -159,9 +161,11 @@ def plot_hwe(result: dict, outpath: Optional[str] = None) -> None:
     plt.tight_layout()
     if outpath:
         plt.savefig(outpath, dpi=150)
-        logger.success(f"HWE plot saved → {outpath}")
+        plt.close(fig)
+        logger.success(f"HWE plot saved -> {outpath}")
     else:
         plt.show()
+        plt.close(fig)
 
 
 # ──────────────────────────────────────────────────────────────
@@ -193,9 +197,9 @@ if __name__ == "__main__":
 
     # Plot one population
     first_result = hardy_weinberg_test(CYP2D6_DEMO_DATA[0])
-    plot_hwe(first_result, outpath=None)   # change to a filepath to save
+    plot_hwe(first_result, outpath="data/processed/hwe_cyp2d6_plot.png")
 
     # Export
     out = "data/processed/hwe_cyp2d6_results.csv"
     df_results.to_csv(out, index=False)
-    print(f"\nResults saved → {out}")
+    print(f"\nResults saved -> {out}")

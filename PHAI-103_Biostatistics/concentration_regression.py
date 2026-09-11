@@ -21,6 +21,8 @@ from scipy import stats
 import statsmodels.api as sm
 import statsmodels.formula.api as smf
 from statsmodels.stats.multicomp import pairwise_tukeyhsd
+import matplotlib
+matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 import seaborn as sns
 from loguru import logger
@@ -68,7 +70,7 @@ def linear_regression_dose_conc(df: pd.DataFrame) -> sm.regression.linear_model.
     X = sm.add_constant(df["dose_mg"])
     y = df["concentration"]
     model = sm.OLS(y, X).fit()
-    logger.info(f"Linear Regression R²={model.rsquared:.4f}  "
+    logger.info(f"Linear Regression R^2={model.rsquared:.4f}  "
                 f"p(dose)={model.pvalues['dose_mg']:.4f}")
     print(model.summary())
     return model
@@ -103,9 +105,9 @@ def anova_by_phenotype(df: pd.DataFrame) -> dict:
         "eta_squared": round(eta_sq, 4),
         "significant": p < 0.05,
         "interpretation": (
-            f"F={F:.2f}, p={p:.6f} → "
+            f"F={F:.2f}, p={p:.6f} -> "
             f"{'Significant difference' if p < 0.05 else 'No significant difference'} "
-            f"across metabolizer phenotypes (η²={eta_sq:.3f})"
+            f"across metabolizer phenotypes (eta^2={eta_sq:.3f})"
         ),
     }
     logger.info(result["interpretation"])
@@ -143,7 +145,7 @@ def log_linear_pk_model(df: pd.DataFrame) -> sm.regression.linear_model.Regressi
     df = df.copy()
     df["log_conc"] = np.log(df["concentration"])
     model = smf.ols("log_conc ~ dose_mg + C(phenotype, Treatment('NM'))", data=df).fit()
-    logger.info(f"Log-linear PK model  R²={model.rsquared:.4f}")
+    logger.info(f"Log-linear PK model  R^2={model.rsquared:.4f}")
     print(model.summary())
     return model
 
@@ -166,6 +168,7 @@ def plot_concentration_by_phenotype(df: pd.DataFrame, outpath: Optional[str] = N
 
     sns.boxplot(
         data=df, x="phenotype", y="concentration",
+        hue="phenotype", legend=False,
         order=METABOLIZER_PHENOTYPES,
         palette=PHENOTYPE_COLORS,
         width=0.5, linewidth=1.5, ax=ax,
@@ -173,6 +176,7 @@ def plot_concentration_by_phenotype(df: pd.DataFrame, outpath: Optional[str] = N
     )
     sns.stripplot(
         data=df, x="phenotype", y="concentration",
+        hue="phenotype", legend=False,
         order=METABOLIZER_PHENOTYPES,
         palette=PHENOTYPE_COLORS,
         size=4, alpha=0.5, jitter=True, ax=ax,
@@ -189,9 +193,11 @@ def plot_concentration_by_phenotype(df: pd.DataFrame, outpath: Optional[str] = N
     plt.tight_layout()
     if outpath:
         plt.savefig(outpath, dpi=150)
-        logger.success(f"Plot saved → {outpath}")
+        plt.close(fig)
+        logger.success(f"Plot saved -> {outpath}")
     else:
         plt.show()
+        plt.close(fig)
 
 
 # ──────────────────────────────────────────────────────────────
@@ -200,7 +206,7 @@ def plot_concentration_by_phenotype(df: pd.DataFrame, outpath: Optional[str] = N
 
 if __name__ == "__main__":
     print("=" * 60)
-    print("  Plasma Concentration Regression — CYP2D6 / Codeine")
+    print("  Plasma Concentration Regression - CYP2D6 / Codeine")
     print("=" * 60)
 
     df = generate_demo_dataset()
@@ -216,7 +222,7 @@ if __name__ == "__main__":
     tukey_df = tukey_posthoc(df)
 
     # Linear regression (overall)
-    print("\n[3] Linear Regression: Dose → Concentration")
+    print("\n[3] Linear Regression: Dose -> Concentration")
     lm = linear_regression_dose_conc(df)
 
     # Log-linear PK model
@@ -225,4 +231,4 @@ if __name__ == "__main__":
 
     # Plot
     print("\n[5] Generating visualisation...")
-    plot_concentration_by_phenotype(df)
+    plot_concentration_by_phenotype(df, outpath="data/processed/concentration_phenotype_plot.png")

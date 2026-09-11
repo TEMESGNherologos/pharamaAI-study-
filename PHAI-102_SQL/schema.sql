@@ -152,13 +152,72 @@ INSERT OR IGNORE INTO genes (symbol, full_name, chromosome) VALUES
 -- ──────────────────────────────────────────────────────────────
 
 INSERT OR IGNORE INTO drugs (generic_name, drug_class, narrow_ti, pharmgkb_id) VALUES
-  ('Codeine',       'Opioid Analgesic',      0, 'PA449088'),
-  ('Warfarin',      'Anticoagulant',         1, 'PA451906'),
-  ('Clopidogrel',   'Antiplatelet',          0, 'PA449053'),
-  ('Tamoxifen',     'Antineoplastic',        0, 'PA451581'),
-  ('Simvastatin',   'HMG-CoA Reductase Inh',0, 'PA451363'),
-  ('Omeprazole',    'Proton Pump Inhibitor', 0, 'PA450704'),
-  ('Fluorouracil',  'Antimetabolite',        1, 'PA128406956'),
-  ('Azathioprine',  'Immunosuppressant',     1, 'PA448413'),
-  ('Irinotecan',    'Topoisomerase Inh',     1, 'PA450085'),
-  ('Metoprolol',    'Beta Blocker',          0, 'PA450480');
+  ('Codeine',        'Opioid Analgesic',      0, 'PA449088'),
+  ('Warfarin',       'Anticoagulant',         1, 'PA451906'),
+  ('Clopidogrel',    'Antiplatelet',          0, 'PA449053'),
+  ('Tamoxifen',      'Antineoplastic',        0, 'PA451581'),
+  ('Simvastatin',    'HMG-CoA Reductase Inh', 0, 'PA451363'),
+  ('Omeprazole',     'Proton Pump Inhibitor', 0, 'PA450704'),
+  ('Fluorouracil',   'Antimetabolite',        1, 'PA128406956'),
+  ('Azathioprine',   'Immunosuppressant',     1, 'PA448413'),
+  ('Irinotecan',     'Topoisomerase Inh',     1, 'PA450085'),
+  ('Metoprolol',     'Beta Blocker',          0, 'PA450480'),
+  ('Fluoxetine',     'SSRI Antidepressant',   0, 'PA449679'),
+  ('Fluconazole',    'Antifungal',            0, 'PA449673'),
+  ('Clarithromycin', 'Macrolide Antibiotic',  0, 'PA448967'),
+  ('Aspirin',        'Antiplatelet / NSAID',  0, 'PA448488');
+
+-- ──────────────────────────────────────────────────────────────
+-- SEED DATA — Clinically Significant Drug Interactions
+-- ──────────────────────────────────────────────────────────────
+
+INSERT OR IGNORE INTO drug_interactions (drug_a_id, drug_b_id, severity, mechanism, management, evidence_source)
+SELECT
+    da.drug_id, db.drug_id,
+    'Major',
+    'Fluoxetine strongly inhibits CYP2D6, blocking codeine bioactivation into morphine.',
+    'Avoid combination. Select non-opioid or alternative analgesic.',
+    'CPIC / FDA'
+FROM drugs da, drugs db
+WHERE da.generic_name = 'Codeine' AND db.generic_name = 'Fluoxetine';
+
+INSERT OR IGNORE INTO drug_interactions (drug_a_id, drug_b_id, severity, mechanism, management, evidence_source)
+SELECT
+    da.drug_id, db.drug_id,
+    'Major',
+    'Omeprazole inhibits CYP2C19 bioactivation of clopidogrel, lowering active metabolite and antiplatelet efficacy.',
+    'Avoid co-administration. Use pantoprazole or H2-blocker.',
+    'FDA'
+FROM drugs da, drugs db
+WHERE da.generic_name = 'Clopidogrel' AND db.generic_name = 'Omeprazole';
+
+INSERT OR IGNORE INTO drug_interactions (drug_a_id, drug_b_id, severity, mechanism, management, evidence_source)
+SELECT
+    da.drug_id, db.drug_id,
+    'Major',
+    'Fluconazole inhibits CYP2C9 metabolism of S-warfarin, causing severe INR elevation and bleeding risk.',
+    'Reduce warfarin dose by 25-50% and monitor INR closely.',
+    'Micromedex'
+FROM drugs da, drugs db
+WHERE da.generic_name = 'Warfarin' AND db.generic_name = 'Fluconazole';
+
+INSERT OR IGNORE INTO drug_interactions (drug_a_id, drug_b_id, severity, mechanism, management, evidence_source)
+SELECT
+    da.drug_id, db.drug_id,
+    'Contraindicated',
+    'Clarithromycin strongly inhibits CYP3A4, dramatically elevating simvastatin AUC and risk of rhabdomyolysis.',
+    'Contraindicated. Suspend simvastatin during macrolide therapy or choose azithromycin.',
+    'FDA'
+FROM drugs da, drugs db
+WHERE da.generic_name = 'Simvastatin' AND db.generic_name = 'Clarithromycin';
+
+INSERT OR IGNORE INTO drug_interactions (drug_a_id, drug_b_id, severity, mechanism, management, evidence_source)
+SELECT
+    da.drug_id, db.drug_id,
+    'Major',
+    'Additive antiplatelet and anticoagulant effects significantly elevate gastrointestinal and major bleeding risks.',
+    'Monitor closely for signs of bleeding. Consider gastroprotection.',
+    'Micromedex'
+FROM drugs da, drugs db
+WHERE da.generic_name = 'Warfarin' AND db.generic_name = 'Aspirin';
+
