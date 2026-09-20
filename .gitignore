@@ -50,3 +50,11 @@ Thumbs.db
 .pytest_cache/
 htmlcov/
 .coverage
+
+# Additional database and archive exclusions
+*.db
+*.sqlite
+*.sqlite3
+*.zip
+data/zip sources/
+
